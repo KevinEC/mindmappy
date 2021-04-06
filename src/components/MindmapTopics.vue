@@ -2,6 +2,7 @@
   <div class="topics">
 		<mindmap-topic v-for="(topic, i) in topics"
 			:title="topic.title"
+			:canvasMouseMove="canvasMouseMoveComputed"
 			@CSS3DObjectInit="atCSS3DObjectInit"
 			:key="i"
 		/>
@@ -15,6 +16,9 @@ export default {
 	components: {
 		MindmapTopic
 	},
+	props: {
+		canvasMouseMove: Object
+	},
 	data() {
 		return{
 			topics: [
@@ -26,6 +30,12 @@ export default {
 				}
 			],
 			allCSS3DObjects: []
+		}
+	},
+	computed: {
+		canvasMouseMoveComputed(){
+			console.log("in mindmaptopics", this.canvasMouseMove);
+			return this.canvasMouseMove;
 		}
 	},
 	methods: {

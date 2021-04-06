@@ -31,7 +31,14 @@ export default {
   data () {
     return {
       height: 0,
-      allTopics: null
+      allTopics: null,
+      canvasMove: {
+        pressed:null,
+        deltaX: null,
+        deltaY: null,
+        pressedX: null,
+        pressedY: null,
+      }
     };
   },
   mounted () {
@@ -45,6 +52,10 @@ export default {
 
     document.addEventListener('keydown', this.onKeyDown);
     document.addEventListener('keyup', this.onKeyUp);
+
+    this.$el.addEventListener('mousemove', this.handleMouseMove);
+		this.$el.addEventListener('mousedown', this.handleMouseDown);
+		this.$el.addEventListener('mouseup', this.handleMouseUp);
   },
   watch: {
     topics() {
@@ -145,7 +156,6 @@ export default {
         
         this.scene.add(obj);
       }, this);
-      //this.renderer.render(this.scene, this.camera);
     },
     animate(){
       window.requestAnimationFrame(() => {
@@ -163,7 +173,31 @@ export default {
       if(e.key === "Control"){
         this.controls.enabled = false;
       }
-    }
+    },
+    handleMouseMove(e){
+			if(this.pressed) {
+				let factor = 3;
+				let deltaX = (e.clientX - this.pressedX) / factor;
+				let deltaY = (-e.clientY + this.pressedY) / factor;
+
+        this.canvasMove.deltaX = deltaX,
+        this.canvasMove.deltaY = deltaY,
+        this.canvasMove.pressedX = this.pressedX,
+        this.canvasMove.pressedY = this.pressedY,
+        
+        this.$emit("canvasMouseMove", this.canvasMove);
+			}
+		},
+		handleMouseDown(e){
+      this.pressed = true;
+      this.canvasMove.pressed = this.pressed;
+			this.pressedX = e.clientX; 
+			this.pressedY = e.clientY;
+		},
+		handleMouseUp(){
+			this.pressed = false;
+      this.canvasMove.pressed = this.pressed;
+		},
   }
 };
 </script>
