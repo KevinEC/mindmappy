@@ -2,12 +2,10 @@
   <div id="app">
     <h1> test</h1>
     <canvas-viewport
-      :topics="allTopicsComputed" 
-      @canvasMouseMove="onCanvasMouseMove"
+      :topics="allTopicsComputed"
     />
     <mindmap-topics 
       @CSS3DObjectsInit="topicsMounted"
-      :canvasMouseMove="canvasMouseMoveComputed"
     />
   </div>
 </template>
@@ -24,25 +22,18 @@ export default {
   },
   data() {
     return {
-      allTopics: [],
-      canvasMouseMove: null
+      allTopics: []
     }
   },
   computed:{
     allTopicsComputed(){
       return this.allTopics;
-    },
-    canvasMouseMoveComputed(){
-      return this.canvasMouseMove;
     }
   },
   methods: {
     topicsMounted(objects){
       console.log("objetcs in app ", objects);
       this.allTopics = objects;
-    },
-    onCanvasMouseMove(move){
-      this.canvasMouseMove = move;
     }
   }
 };

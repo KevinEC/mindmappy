@@ -12,10 +12,6 @@ export default {
 		title: {
 			type: String,
 			default: "new topic"
-		},
-		canvasMove: {
-			type: Object,
-			default: null
 		}
 	},
 	data () {
