@@ -1,7 +1,7 @@
 <template>
   <div class="viewport">
+    <div id="createTopicGraphics"></div>
   </div>
-  
 </template>
 
 <script>
@@ -10,36 +10,34 @@ import {
     PerspectiveCamera,
     Color,
     FogExp2,
-    // CylinderBufferGeometry,
-    // MeshPhongMaterial,
-    // Mesh,
-    // DirectionalLight,
-    // AmbientLight,
     MOUSE,
-    // LineBasicMaterial,
-    // Geometry,
-    // Vector3,
-    // Line
   } from "three"
 
+import { mapActions, mapGetters } from 'vuex'
+
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
-import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
+import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
+
+//import { createNoisyEasing } from "../animate.js"
+const TWEEN = require('@tweenjs/tween.js')
+
 export default {
   props: {
     topics: Object,
+    topicsLength: Number
   },
   data () {
     return {
       height: 0,
       allTopics: null,
-      canvasMove: {
-        pressed:null,
-        deltaX: null,
-        deltaY: null,
-        pressedX: null,
-        pressedY: null,
+      createTopicObject: null,
+      mouseData: {
+        prevSampleCounter: 9
       }
     };
+  },
+  computed: {
+    ...mapGetters(['getCreatingTopic']),
   },
   mounted () {
     this.allTopics = this.topics;
@@ -58,12 +56,20 @@ export default {
 		this.$el.addEventListener('mouseup', this.handleMouseUp);
   },
   watch: {
-    topics() {
+    topicsLength() {
+      console.log("topics in canvas:", this.topics);
       this.allTopics = this.topics;
       this.updateSceneObjects();
+      
     }
   },
   methods: {
+    ...mapActions([
+      'updateCanvasMouseMove',
+      'updateCanvasMousePressed',
+      'setScene',
+      'setCamera',
+    ]),
     setSize(){
       this.width = this.$el.offsetWidth;
       this.height = this.$el.offsetHeight;
@@ -82,7 +88,8 @@ export default {
     },
     initCamera(){
       this.camera = new PerspectiveCamera(90, this.width / this.height, 1, 1000);
-      this.camera.position.z = 100;
+      this.camera.position.z = 300;
+      this.setCamera(this.camera);
     },
     initControls(){
       this.controls = new TrackballControls(
@@ -105,35 +112,7 @@ export default {
       this.scene = new Scene();
       this.scene.background = new Color(0xcccccc);
       this.scene.fog = new FogExp2(0xcccccc, 0.002);
-      this.pyramids = [];
-
-      {
-      // let geometry = new CylinderBufferGeometry(0, 10, 30, 4, 1);
-      // let material = new MeshPhongMaterial({
-      //   color: 0xffffff,
-      //   flatShading: true
-      // });
-      
-      // for (let i = 0; i < 500; i++) {
-      //   let mesh = new Mesh(geometry, material);
-      //   mesh.position.x = (Math.random() - 0.5) * 1000;
-      //   mesh.position.y = (Math.random() - 0.5) * 1000;
-      //   mesh.position.z = 0;
-      //   mesh.updateMatrix();
-      //   mesh.matrixAutoUpdate = false;
-      //   this.pyramids.push(mesh);
-      // }
-      // this.scene.add(...this.pyramids);
-      // // lights
-      // let lightA = new DirectionalLight(0xffffff);
-      // lightA.position.set(1, 1, 1);
-      // this.scene.add(lightA);
-      // let lightB = new DirectionalLight(0x002288);
-      // lightB.position.set(-1, -1, -1);
-      // this.scene.add(lightB);
-      // let lightC = new AmbientLight(0x222222);
-      // this.scene.add(lightC);
-      }
+      this.setScene(this.scene);
     },
     init(){
       this.setSize();
@@ -141,63 +120,176 @@ export default {
       this.initCamera();
       this.initControls();
       this.initScene();
+      this.initCreateTopic();
+
       this.renderer.render(this.scene, this.camera);
       this.controls.addEventListener("change", () => {
         this.renderer.render(this.scene, this.camera);
       });
     },
+    initCreateTopic(){
+      this.createTopicObject = new CSS3DObject(this.$el.querySelector('#createTopicGraphics'));
+      this.createTopicObject.position.x = 0;
+      this.createTopicObject.position.y = 0;
+      this.createTopicObject.position.z = 0;
+      this.createTopicObject.width = this.createTopicObject.element.offsetWidth;
+      this.createTopicObject.height = this.createTopicObject.element.offsetHeight;
+      this.initCreatTopicIdleAnimation();
+
+      this.scene.add(this.createTopicObject);
+    },
     updateSceneObjects(){
-      console.log("updating scene objects. adding ", this.allTopics.length);
       this.allTopics.forEach((obj, i) => {
-        //obj = new CSS3DObject(obj);
-        obj.position.x = 0;
-        obj.position.y = i*80;
+        console.log(obj.userData);
+        if(obj.userData.pos.x == null) {
+          obj.position.x = 0;
+          obj.position.y = i*(-80);
+        } else {
+          obj.position.x = obj.userData.pos.x;
+          obj.position.y = obj.userData.pos.y;
+        }
         obj.position.z = 0;
         
         this.scene.add(obj);
       }, this);
     },
+    updateCreateTopicObject(x,y){
+      this.createTopicObject.position.x = x + this.camera.position.x;
+      this.createTopicObject.position.y = y + this.camera.position.y;
+    
+      if(this.collideWith(this.createTopicObject, this.allTopics) || this.getCreatingTopic)
+        this.setCreateTopicOpacity(false);
+      else 
+        this.setCreateTopicOpacity(true);
+    },
     animate(){
       window.requestAnimationFrame(() => {
         this.animate();
+        TWEEN.update();
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
       });
     },
+    collideWith(object, collection){
+      let hit = false;
+      collection.forEach((otherObj) => {
+        if(Math.abs(object.position.x - otherObj.position.x) < object.width &&
+           Math.abs(object.position.y - otherObj.position.y) < object.height)
+        { hit = true; }
+      })
+      return hit;
+    },
     onKeyDown(e){
       if(e.key === "Control"){
         this.controls.enabled = true;
+        this.setCreateTopicOpacity(false);
       }
     },
     onKeyUp(e){
       if(e.key === "Control"){
         this.controls.enabled = false;
+        this.setCreateTopicOpacity(true);
       }
     },
     handleMouseMove(e){
-			if(this.pressed) {
-				let factor = 3;
-				let deltaX = (e.clientX - this.pressedX) / factor;
-				let deltaY = (-e.clientY + this.pressedY) / factor;
-
-        this.canvasMove.deltaX = deltaX,
-        this.canvasMove.deltaY = deltaY,
-        this.canvasMove.pressedX = this.pressedX,
-        this.canvasMove.pressedY = this.pressedY,
-        
-        this.$emit("canvasMouseMove", this.canvasMove);
-			}
+      this.updateMouseData(e);
+      this.updateCreateTopicObject(this.mouseData.xThree, this.mouseData.yThree);
 		},
 		handleMouseDown(e){
       this.pressed = true;
-      this.canvasMove.pressed = this.pressed;
+      this.updateCanvasMousePressed(true);
 			this.pressedX = e.clientX; 
 			this.pressedY = e.clientY;
+      this.createNewTopic(e);
 		},
 		handleMouseUp(){
-			this.pressed = false;
-      this.canvasMove.pressed = this.pressed;
+      this.pressed = false;
+			this.updateCanvasMousePressed(false);
 		},
+    updateMouseData(e){
+      let factor = this.$el.offsetHeight / (this.camera.position.z * 2.0);
+      
+      let mouseX = (e.clientX - (this.$el.offsetWidth / 2))/factor;
+      let mouseY = (-e.clientY + (this.$el.offsetHeight / 2))/factor;
+
+      this.mouseData.xThree = mouseX;
+      this.mouseData.yThree = mouseY;
+
+      if(this.mouseData.prevSampleCounter === 9) {
+        this.mouseData.prevXClient = e.clientX;
+        this.mouseData.prevYClient = e.clientY;
+        this.mouseData.prevSampleCounter = 0;
+      }
+      this.mouseData.prevSampleCounter += 1;
+
+      let deltaX = e.clientX - this.mouseData.prevXClient;
+      let deltaY = e.clientY - this.mouseData.prevYClient;
+      let speed = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2))
+      this.mouseData.speed = speed;
+
+      let angle = Math.atan(deltaY/deltaX);
+      this.mouseData.angle = angle;
+      
+      if(this.pressed) {
+        let deltaXPressed = (e.clientX - this.pressedX) / factor;
+        let deltaYPressed = (-e.clientY + this.pressedY) / factor;
+        this.mouseData.deltaX = deltaXPressed;
+        this.mouseData.deltaY = deltaYPressed;
+        this.mouseData.pressedX = this.pressedX;
+        this.mouseData.pressedY = this.pressedY;
+			}
+      this.updateCanvasMouseMove(this.mouseData);
+      //console.log("mousedata result: ", speed, angle);
+    },
+    setCreateTopicOpacity(visibility){
+      if(visibility){
+        this.createTopicObject.element.style.opacity = 1;
+        this.createTopicObject.element.style.zIndex = 10;
+      } else {
+        this.createTopicObject.element.style.opacity = 0;
+        this.createTopicObject.element.style.zIndex = -1;
+      }
+    },
+    initCreatTopicIdleAnimation(){
+      new TWEEN.Tween({scaleX: 0.98})
+        .to({scaleX: 1.015}, 750)
+        .easing(TWEEN.Easing.Quadratic.InOut)
+        .repeat(Infinity)
+        .yoyo(true)
+        .onUpdate((object) => {
+          this.createTopicObject.scale.x = object.scaleX;
+        })
+        .start();
+
+      new TWEEN.Tween({scaleY: 0.995})
+        .to({scaleY: 1.01}, 750)
+        .easing(TWEEN.Easing.Quadratic.InOut)
+        .repeat(Infinity)
+        .yoyo(true)
+        .delay(150)
+        .onUpdate((object) => {
+          this.createTopicObject.scale.y = object.scaleY;
+        })
+        .start();
+
+      new TWEEN.Tween({rotation: -Math.PI/4})
+        .to({rotation: Math.PI/4}, 4000)
+        .easing(TWEEN.Easing.Sinusoidal.InOut)
+        .yoyo(true)
+        .repeat(Infinity)
+        .onUpdate((object) => {
+          
+          this.createTopicObject.rotation.z = object.rotation;
+        })
+        //.start();
+    },
+    createNewTopic(e){
+      if(e.button === 1) // right mb
+      {
+        this.$emit('createNewTopic', {x: this.mouseData.xThree, y: this.mouseData.yThree});
+        this.setCreateTopicOpacity(false);
+      }
+    }
   }
 };
 </script>
@@ -206,5 +298,20 @@ export default {
   .viewport {
     height: 100%;
     width: 100%;
+  }
+  $createColor: rgba(53, 238, 223);
+  #createTopicGraphics{
+    position: relative;
+    width: 60px;
+    height: 60px;
+    border-radius: 100%;
+    background: transparent;
+    border: 1px solid rgba($createColor, 0.4);
+    box-shadow: 0 0 10px rgba($createColor, 0.2),
+                0 0 23px rgba($createColor, 0.1),
+                0 0 43px rgba($createColor, 0.09);
+    z-index: 10;
+    transition: opacity 0.2s ease-out;
+    opacity: 1;
   }
 </style>

@@ -1,7 +1,9 @@
 <template>
   <div class="topics">
-		<mindmap-topic v-for="(topic, i) in topics"
+		<new-mindmap-topic :pos="createNewTopicPos" />
+		<mindmap-topic v-for="(topic, i) in getAllTopics"
 			:title="topic.title"
+			:pos="topic.pos"
 			@CSS3DObjectInit="atCSS3DObjectInit"
 			:key="i"
 		/>
@@ -10,26 +12,25 @@
 
 <script>
 import MindmapTopic from '@/components/MindmapTopic.vue';
+import NewMindmapTopic from '@/components/NewMindmapTopic.vue';
+
+import { mapGetters } from "vuex"
 
 export default {
 	components: {
-		MindmapTopic
+		MindmapTopic,
+		NewMindmapTopic
 	},
 	props: {
-		canvasMouseMove: Object
+		createNewTopicPos: Object
 	},
 	data() {
 		return{
-			topics: [
-				{
-					title: "mindmap",
-				},
-				{
-					title: "idea"
-				}
-			],
 			allCSS3DObjects: []
 		}
+	},
+	computed: {
+		...mapGetters(['getAllTopics']),
 	},
 	methods: {
 		atCSS3DObjectInit(object){
@@ -37,7 +38,7 @@ export default {
 
 			// hard coded replacement for watch. unreliable?
 			// good performance tho
-			if(this.allCSS3DObjects.length === this.topics.length) {
+			if(this.allCSS3DObjects.length === this.getAllTopics.length) {
 				this.$emit('CSS3DObjectsInit', this.allCSS3DObjects);
 			}
 		}

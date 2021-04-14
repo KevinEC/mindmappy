@@ -6,29 +6,38 @@
 
 <script>
 import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
+import { MathUtils } from 'three';
+
+import { mapGetters, mapState } from 'vuex'
 
 export default {
 	props:{
 		title: {
 			type: String,
 			default: "new topic"
-		}
+		},
+		pos: Object
 	},
 	data () {
 		return {
 			object: null,
 			id: null,
 			pressed: false,
-			pressedX: null,
-			pressedY: null,
-			pressedObjX: null,
-			pressedObjY: null,
+			currMouseX: 0,
+			currMouseY: 0,
+			prevMouseX: 0,
+			prevMouseY: 0,
 		}
 	},
 	computed: {
-		canvasMoveComputed(){
-			return this.canvasMove;
-		}
+		...mapGetters([
+			'getCanvasMouseMove',
+			'getCanvasMousePressed'
+		]),
+		...mapState([
+			'canvasMouseMove',
+			'canvasMouseMovement'
+		])
 	},
 	created(){
 		this.id = Math.floor(Math.random() * Math.pow(10, 15));
@@ -41,18 +50,29 @@ export default {
 		this.initCSS3DObject();
 		this.$emit('CSS3DObjectInit', this.object)
 	},
+	watch: {
+		canvasMouseMovement(){
+			this.handleCanvasMouseMove();
+		}
+	},
 	methods: {
-		handleMouseMove(e){
-			console.log("canvasMove in topic:", this.canvasMoveComputed);
-			if(this.pressed) {
-				let factor = 3;
-				let deltaX = (e.clientX - this.pressedX) / factor;
-				let deltaY = (-e.clientY + this.pressedY) / factor;
-				console.log("delta", deltaX, deltaY)
-				//console.log("move", e.clientX, e.clientY)
-				this.object.position.x = this.pressedObjX + deltaX;
-				this.object.position.y = this.pressedObjY + deltaY;
+		handleMouseMove(){
+			
+		},
+		handleCanvasMouseMove(){
+			if(this.getCanvasMousePressed && this.pressed) {
+				this.currMouseX = this.getCanvasMouseMove.deltaX;
+				this.currMouseY = this.getCanvasMouseMove.deltaY;
 
+				this.prevMouseX = MathUtils.lerp(this.prevMouseX, this.currMouseX, 0.1);
+				this.prevMouseY = MathUtils.lerp(this.prevMouseY, this.currMouseY, 0.1);
+
+				
+				this.object.position.x = 
+					this.pressedObjX + (this.currMouseX); //+ this.currMouseX);
+
+				this.object.position.y = 
+					this.pressedObjY + (this.currMouseY); //+ this.currMouseY);
 			}
 		},
 		handleMouseDown(e){
@@ -62,17 +82,16 @@ export default {
 
 			this.pressedObjX = this.object.position.x; 
 			this.pressedObjY = this.object.position.y;
-			
-			console.log("down at", this.pressedX, this.pressedY);
-			console.log("down object pos", this.object.position.x, this.object.position.y);
 		},
 		handleMouseUp(){
-			console.log("up")
 			this.pressed = false;
 		},
 		initCSS3DObject(){
-			if(this.object === null)
+			if(this.object === null) {
 				this.object = new CSS3DObject(this.$el);
+				this.object.userData.title = this.title;
+				this.object.userData.pos = this.pos;
+			}
 		}
 	}
 
@@ -85,9 +104,13 @@ export default {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	border-radius: 5px;
-	padding: 20px;
-	background-color: blanchedalmond;
-	box-shadow: 0 0 10px rgba(0,0,0,0.1);
+	border-radius: 300px;
+	padding: 10px 20px;
+	background-color: white;
+	box-shadow: 
+				0 0 2px rgba(0,0,0,0.1),
+				0 0 5px rgba(0,0,0,0.08),
+				0 0 15px rgba(0,0,0,0.15);
+	font-family: 'Source Sans Pro';
 }
 </style>

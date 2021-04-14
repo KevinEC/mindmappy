@@ -1,11 +1,13 @@
 <template>
   <div id="app">
-    <h1> test</h1>
     <canvas-viewport
       :topics="allTopicsComputed"
+      :topicsLength="topicsLengthComputed"
+      @createNewTopic="createNewTopic"
     />
     <mindmap-topics 
       @CSS3DObjectsInit="topicsMounted"
+      :createNewTopicPos="createNewTopicPosComputed"
     />
   </div>
 </template>
@@ -22,24 +24,37 @@ export default {
   },
   data() {
     return {
-      allTopics: []
+      allTopics: [],
+      createNewTopicPos: {},
+			topicsLength: null,
     }
   },
   computed:{
     allTopicsComputed(){
       return this.allTopics;
+    },
+    topicsLengthComputed(){
+      return this.topicsLength;
+    },
+    createNewTopicPosComputed(){
+      return this.createNewTopicPos;
     }
   },
   methods: {
     topicsMounted(objects){
       console.log("objetcs in app ", objects);
       this.allTopics = objects;
+      this.topicsLength = objects.length;
+    },
+    createNewTopic(pos){
+      this.createNewTopicPos = pos;
     }
   }
 };
 </script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@500&family=Source+Sans+Pro:ital,wght@0,600;1,600&display=swap');
 html, body {
   width: 100%;
   height: 100%;
