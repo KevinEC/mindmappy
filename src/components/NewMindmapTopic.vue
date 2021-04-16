@@ -58,20 +58,20 @@ export default {
     submitNewTopic(e){
       e.preventDefault();
       let value = e.target[0].value;
-      console.log(value);
       this.pushTopic({
         title: value,
+        id: value + (this.object.position.x) + (this.object.position.y),
         pos: {
           x: this.object.position.x,
           y: this.object.position.y
-        }
+        },
+        connections: []
       });
       this.setCreatingTopic(false);
       this.$el.querySelector(".createInput").value = "";
       this.object.visible = false;
     },
     blur(){
-      console.log("blur");
       this.setCreatingTopic(false);
       this.object.visible = false;
     }

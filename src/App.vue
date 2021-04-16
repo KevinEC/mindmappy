@@ -5,8 +5,7 @@
       :topicsLength="topicsLengthComputed"
       @createNewTopic="createNewTopic"
     />
-    <mindmap-topics 
-      @CSS3DObjectsInit="topicsMounted"
+    <mindmap-topics
       :createNewTopicPos="createNewTopicPosComputed"
     />
   </div>
@@ -30,22 +29,11 @@ export default {
     }
   },
   computed:{
-    allTopicsComputed(){
-      return this.allTopics;
-    },
-    topicsLengthComputed(){
-      return this.topicsLength;
-    },
     createNewTopicPosComputed(){
       return this.createNewTopicPos;
     }
   },
   methods: {
-    topicsMounted(objects){
-      console.log("objetcs in app ", objects);
-      this.allTopics = objects;
-      this.topicsLength = objects.length;
-    },
     createNewTopic(pos){
       this.createNewTopicPos = pos;
     }
@@ -55,6 +43,9 @@ export default {
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@500&family=Source+Sans+Pro:ital,wght@0,600;1,600&display=swap');
+:root{
+  --create-color: rgb(53, 238, 223);
+}
 html, body {
   width: 100%;
   height: 100%;

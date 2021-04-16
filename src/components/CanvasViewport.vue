@@ -13,7 +13,7 @@ import {
     MOUSE,
   } from "three"
 
-import { mapActions, mapGetters } from 'vuex'
+import { mapActions, mapGetters, mapState } from 'vuex'
 
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
@@ -37,9 +37,22 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(['getCreatingTopic']),
+    ...mapGetters([
+      'getCreatingTopic',
+      'getAllTopicsLength',
+      'getAllTopics',
+      'getShiftKey',
+      'getPressedTopicId'
+    ]),
+    ...mapState(['topicsMounted']),
   },
-  mounted () {
+  watch: {
+    topicsMounted(){
+      this.allTopics = this.getAllTopics;
+      this.updateSceneObjects();
+    }
+  },
+  mounted() {
     this.allTopics = this.topics;
     this.init();
     this.animate();
@@ -55,20 +68,15 @@ export default {
 		this.$el.addEventListener('mousedown', this.handleMouseDown);
 		this.$el.addEventListener('mouseup', this.handleMouseUp);
   },
-  watch: {
-    topicsLength() {
-      console.log("topics in canvas:", this.topics);
-      this.allTopics = this.topics;
-      this.updateSceneObjects();
-      
-    }
-  },
   methods: {
     ...mapActions([
       'updateCanvasMouseMove',
       'updateCanvasMousePressed',
       'setScene',
       'setCamera',
+      'updateTopicById',
+      'setShiftKey',
+      'deselectAllTopics'
     ]),
     setSize(){
       this.width = this.$el.offsetWidth;
@@ -139,18 +147,13 @@ export default {
       this.scene.add(this.createTopicObject);
     },
     updateSceneObjects(){
-      this.allTopics.forEach((obj, i) => {
-        console.log(obj.userData);
-        if(obj.userData.pos.x == null) {
-          obj.position.x = 0;
-          obj.position.y = i*(-80);
-        } else {
-          obj.position.x = obj.userData.pos.x;
-          obj.position.y = obj.userData.pos.y;
-        }
-        obj.position.z = 0;
+      this.allTopics.forEach((topic) => {
+        console.log(topic.object)
+        topic.object.position.x = topic.pos.x;
+        topic.object.position.y = topic.pos.y;
+        topic.object.position.z = 0;
         
-        this.scene.add(obj);
+        this.scene.add(topic.object);
       }, this);
     },
     updateCreateTopicObject(x,y){
@@ -172,9 +175,9 @@ export default {
     },
     collideWith(object, collection){
       let hit = false;
-      collection.forEach((otherObj) => {
-        if(Math.abs(object.position.x - otherObj.position.x) < object.width &&
-           Math.abs(object.position.y - otherObj.position.y) < object.height)
+      collection.forEach((otherTopic) => {
+        if(Math.abs(object.position.x - otherTopic.object.position.x) < object.width &&
+           Math.abs(object.position.y - otherTopic.object.position.y) < object.height)
         { hit = true; }
       })
       return hit;
@@ -184,11 +187,17 @@ export default {
         this.controls.enabled = true;
         this.setCreateTopicOpacity(false);
       }
+      if(e.key === "Shift") {
+        this.setShiftKey(true);
+      }
     },
     onKeyUp(e){
       if(e.key === "Control"){
         this.controls.enabled = false;
         this.setCreateTopicOpacity(true);
+      }
+      if(e.key === "Shift") {
+        this.setShiftKey(false);
       }
     },
     handleMouseMove(e){
