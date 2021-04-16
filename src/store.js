@@ -83,7 +83,8 @@ const store = createStore({
 		state.shiftKey = pressed;
 	},
 	DESELECT_ALL_TOPICS_BUT(state, id){
-		state.selectedTopics = [id];
+		if(id === "all") state.selectedTopics = [];
+		else state.selectedTopics = [id];
 		state.deselectAllTopicsSignal = Math.random();
 	}
   },

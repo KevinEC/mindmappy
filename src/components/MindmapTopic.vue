@@ -112,26 +112,32 @@ export default {
 			this.pressedObjX = this.object.position.x; 
 			this.pressedObjY = this.object.position.y;
 			this.setPressedTopic(this.id);
+			this.handleSelection();
 		},
 		handleMouseUp(){
 			this.pressed = false;
-			console.log(this.getSelectedTopicsLength, this.getShiftKey);
-			if(this.getShiftKey){
-				this.selected = !this.selected;
-				this.toggleSelectedTopic(this.id);
-			} 
-			else {
-				this.selected = true;
-				console.log("selected set true");
-				this.toggleSelectedTopic(this.id);
-				this.deselectAllTopicsBut(this.id)	
-				
-			}
 		},
 		initCSS3DObject(){
 			if(this.object === null) {
 				this.object = new CSS3DObject(this.$el);
 				this.object.userData = this.data;
+			}
+		},
+		handleSelection(){
+			if(this.getShiftKey){
+				this.selected = !this.selected;
+				this.toggleSelectedTopic(this.id);
+			} 
+			else {
+				if(this.selected){
+					this.selected = false;
+					this.deselectAllTopicsBut("all")	
+
+				} else {
+					this.selected = true;
+					this.toggleSelectedTopic(this.id);
+					this.deselectAllTopicsBut(this.id)	
+				}
 			}
 		}
 	}
