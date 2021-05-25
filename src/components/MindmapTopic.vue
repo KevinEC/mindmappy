@@ -82,7 +82,6 @@ export default {
 		},
 	},
 	mounted() {
-		console.log("topic mounted");
 		this.$el.addEventListener('mousemove', this.handleMouseMove);
 		this.$el.addEventListener('mouseleave', this.handleMouseLeave);
 		this.$el.addEventListener('mousedown', this.handleMouseDown);
@@ -179,11 +178,9 @@ export default {
 			this.handleNewConnection(e);
 			this.handleRemoveConnection();
 			
-			console.log("floating inside topic componenet: ", this.floating)
 			if(this.floating){
 				// V this is deffo a part of the problem
 				//if(!this.localMenuActive) 
-				console.log("floating paused SET", true)
 				this.floatingPaused = true;
 				this.handleFloatingAnimation(false);
 			}
@@ -194,10 +191,8 @@ export default {
 			this.setPressedTopic(null);
 			this.handleGraphNodeMouseUp();
 
-			console.log("floating paused", this.floatingPaused)
 			if(this.floatingPaused && !this.preventFloatingResume) {
 				this.initFloatAnimation();
-				console.log("started from FLOATING PAUSED");
 				this.handleFloatingAnimation(true);
 				this.floatingPaused = false;
 			}
@@ -259,8 +254,6 @@ export default {
 		},
 		toggleFloating(){
 			this.floating = !this.floating;
-			console.log("toggled floating. now: ", this.floating);
-
 			if(this.floating){
 				this.initFloatAnimation();
 				this.preventFloatingResume = false;
@@ -386,14 +379,12 @@ export default {
 		},
 		handleFloatingAnimation(floating){
 			if(floating){
-				console.log("floating tween started");
 				this.floatingTweens[0].start();
 			} else {
 				// find which tween is currently playing and stop it
 				for (const tween of this.floatingTweens) {
 					if(tween._isPlaying){
 						tween.stop();
-						console.log("floating tween stopped");
 					}
 				}	
 			}
@@ -465,7 +456,6 @@ export default {
 					up: {title: "toggle floating", id: "toggleFloating", payload: { toggleFloating: this.toggleFloating}},
 				};
 
-				console.log("remove id:", this.getSelectedTopics)
 				if(this.getSelectedTopics.length === 1){
 					menu.left = { title: "remove connection", id: "removeConnection", payload: {localRemoveConnectionFn: this.initRemoveConnection}}
 				}

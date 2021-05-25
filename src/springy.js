@@ -350,7 +350,6 @@
 
 		return this.nodePoints[node.id];
 	};
-	let once = true;
 	Layout.ForceDirected.prototype.spring = function(edge) {
 		if (!(edge.id in this.edgeSprings)) {
 			var length = (edge.data.length !== undefined) ? edge.data.length : 1.0;
@@ -383,10 +382,6 @@
 				this.point(edge.source), this.point(edge.target), length, edge.data // edge.data is the custom k stiffness
 			);
 			
-		}
-		if(once) {
-			console.log(edge, this.stiffness);
-			once = false;
 		}
 		return this.edgeSprings[edge.id];
 	};

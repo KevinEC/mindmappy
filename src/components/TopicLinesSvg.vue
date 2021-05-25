@@ -251,7 +251,6 @@ export default {
 			//console.log("cssified id before:", id);
 			id = id.replaceAll(" ", "-")
 			id = id.replace(/[^a-zA-Z0-9 ]/g, "")
-			console.log("cssified id:", id);
 			return id;
 		}
 	}

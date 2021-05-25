@@ -8,12 +8,14 @@
     <mindmap-topics
       :createNewTopicPos="createNewTopicPosComputed"
     />
+    <reset-btn />
   </div>
 </template>
 
 <script>
 import CanvasViewport from './components/CanvasViewport.vue';
 import MindmapTopics from './components/MindmapTopics.vue';
+import ResetBtn from './components/ResetBtn.vue';
 
 import { mapActions } from "vuex";
 
@@ -21,7 +23,8 @@ export default {
   name: "App",
   components: {
     CanvasViewport,
-    MindmapTopics
+    MindmapTopics,
+    ResetBtn
   },
   beforeCreate(){
     this.$store.commit('INIT_TOPICS');
