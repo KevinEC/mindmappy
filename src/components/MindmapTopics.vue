@@ -2,10 +2,12 @@
   <div class="topics">
 		<topic-lines-svg /> 
 		<new-mindmap-topic :pos="createNewTopicPos" />
+		<pie-menu />
 		<mindmap-topic v-for="(topic, i) in getAllTopics"
 			:data="topic"
 			@CSS3DObjectInit="atCSS3DObjectInit"
-			:key="i"
+			:key="topic.id"
+			:tabindex="i"
 		/>
 	</div>
 </template>
@@ -14,6 +16,7 @@
 import MindmapTopic from '@/components/MindmapTopic.vue';
 import TopicLinesSvg from '@/components/TopicLinesSvg.vue';
 import NewMindmapTopic from '@/components/NewMindmapTopic.vue';
+import PieMenu from '@/components/PieMenu.vue';
 
 import { mapActions, mapGetters } from "vuex"
 
@@ -21,6 +24,7 @@ export default {
 	components: {
 		MindmapTopic,
 		NewMindmapTopic,
+		PieMenu,
 		TopicLinesSvg,
 	},
 	props: {

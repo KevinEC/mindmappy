@@ -20,6 +20,7 @@ import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRe
 
 //import { createNoisyEasing } from "../animate.js"
 const TWEEN = require('@tweenjs/tween.js')
+const Springy = require('@/springy.js')
 
 export default {
   props: {
@@ -30,6 +31,7 @@ export default {
     return {
       height: 0,
       allTopics: null,
+      graph: null,
       createTopicObject: null,
       mouseData: {
         prevSampleCounter: 9
@@ -42,14 +44,17 @@ export default {
       'getAllTopicsLength',
       'getAllTopics',
       'getShiftKey',
-      'getPressedTopicId'
+      'getPressedTopicId',
+      'getTopicById'
     ]),
     ...mapState(['topicsMounted']),
   },
   watch: {
     topicsMounted(){
       this.allTopics = this.getAllTopics;
-      this.updateSceneObjects();
+      //this.updateSceneObjects();
+      if(this.graph === null)
+        this.initGraph();
     }
   },
   mounted() {
@@ -76,7 +81,11 @@ export default {
       'setCamera',
       'updateTopicById',
       'setShiftKey',
-      'deselectAllTopics'
+      'deselectAllTopics',
+      'setGraph',
+      'setGraphLayout',
+      'setMenuOption',
+      'saveTopicsToLocalStorage'
     ]),
     setSize(){
       this.width = this.$el.offsetWidth;
@@ -106,7 +115,7 @@ export default {
       );
       this.controls.enabled = false;
       this.controls.rotateSpeed = 1.0;
-      this.controls.zoomSpeed = 1.2;
+      this.controls.zoomSpeed = 0.2;
       this.controls.panSpeed = 0.1;
       this.controls.noZoom = false;
       this.controls.noPan = false;
@@ -148,7 +157,7 @@ export default {
     },
     updateSceneObjects(){
       this.allTopics.forEach((topic) => {
-        console.log(topic.object)
+        //console.log(topic.object)
         topic.object.position.x = topic.pos.x;
         topic.object.position.y = topic.pos.y;
         topic.object.position.z = 0;
@@ -167,6 +176,7 @@ export default {
     },
     animate(){
       window.requestAnimationFrame(() => {
+        // optimization: calculate frame time and pass to TWEEN
         this.animate();
         TWEEN.update();
         this.controls.update();
@@ -190,6 +200,12 @@ export default {
       if(e.key === "Shift") {
         this.setShiftKey(true);
       }
+      if(e.key === "Alt") {
+        this.recalculateGraph();
+      }
+      if(e.key === "Tab"){
+        this.saveTopicsToLocalStorage()
+      }
     },
     onKeyUp(e){
       if(e.key === "Control"){
@@ -209,7 +225,8 @@ export default {
       this.updateCanvasMousePressed(true);
 			this.pressedX = e.clientX; 
 			this.pressedY = e.clientY;
-      this.createNewTopic(e);
+      //this.createNewTopic(e);
+      this.handleMenu(e);
 		},
 		handleMouseUp(){
       this.pressed = false;
@@ -236,7 +253,7 @@ export default {
       let speed = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2))
       this.mouseData.speed = speed;
 
-      let angle = Math.atan(deltaY/deltaX);
+      let angle = Math.atan(-deltaY/deltaX);
       this.mouseData.angle = angle;
       
       if(this.pressed) {
@@ -248,7 +265,8 @@ export default {
         this.mouseData.pressedY = this.pressedY;
 			}
       this.updateCanvasMouseMove(this.mouseData);
-      //console.log("mousedata result: ", speed, angle);
+      //console.log("mousedata result: ", speed, angle*(180/Math.PI));
+      //console.log("mousedata result: ", "deltaX:",deltaX, "deltaY:",-deltaY, angle*(180/Math.PI));
     },
     setCreateTopicOpacity(visibility){
       if(visibility){
@@ -293,11 +311,84 @@ export default {
         //.start();
     },
     createNewTopic(e){
-      if(e.button === 1) // right mb
+      if(e.button === 1) // middle mb
       {
-        this.$emit('createNewTopic', {x: this.mouseData.xThree, y: this.mouseData.yThree});
+        //this.$emit('createNewTopic', {x: this.mouseData.xThree, y: this.mouseData.yThree});
+        this.createNewTopic({x: this.mouseData.xThree, y: this.mouseData.yThree});
         this.setCreateTopicOpacity(false);
       }
+    },
+    handleMenu(e){
+      if(e.button === 1){
+        this.setCreateTopicOpacity(false);
+        this.setMenuOption({
+          right: {title: "create topic", id: "createTopic"}, 
+          //left: {title: "gather topics", id: "gatherTopics"}
+        });
+      }
+    },
+    initGraph(){
+      let nodes = [];
+      let edges = [];
+      this.getAllTopics.forEach(topic => {
+        nodes.push(""+topic.id);
+        topic.connections.forEach(connection => {
+          edges.push([""+topic.id, ""+connection.id, connection.k]);
+        });
+      });
+      let graphData = {
+        "nodes": nodes,
+        "edges": edges
+      };
+
+      this.graph = new Springy.Graph();
+      this.graph.loadJSON(graphData);
+
+      this.graphLayout = new Springy.Layout.ForceDirected(
+        this.graph,
+        200.0, // Spring stiffness
+        250.0, // Node repulsion
+        0.5, // Damping
+        0.0 // minEnergyThreshold
+      );
+
+      let x, y;
+      let coordFactor = 50;
+      this.setGraph(this.graph);
+      this.setGraphLayout(this.graphLayout);
+      this.graphRenderer = new Springy.Renderer(
+        this.graphLayout,
+        function clear() {
+          // code to clear screen
+        },
+        function drawEdge(/*edge, p1, p2*/) {
+          //console.log("edge data: ", edge, p1, p2);
+
+        },
+        (node, point) => { // drawNode
+          //console.log("node data: ", node, p);
+          x = point.p.x*coordFactor;
+          y = point.p.y*coordFactor;
+          this.updateTopicById({
+            id: node.id, 
+            updateData: {
+              pos: {
+                x: x,
+                y: y
+              },
+              graphNode: {node, point}
+            }
+          })
+        }
+      );
+      this.graphRenderer.start();
+    },
+    recalculateGraph(){
+      this.getAllTopics.forEach(topic => {
+        topic.graphNode.point.p.x = topic.pos.x / 50;
+        topic.graphNode.point.p.y = topic.pos.y / 50;
+      })
+      this.graphRenderer.start();
     }
   }
 };
@@ -311,8 +402,9 @@ export default {
   $createColor: rgba(53, 238, 223);
   #createTopicGraphics{
     position: relative;
-    width: 60px;
-    height: 60px;
+    width: 100px;
+    height: 100px;
+    padding: 10px;
     border-radius: 100%;
     background: transparent;
     border: 1px solid rgba($createColor, 0.4);
