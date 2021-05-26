@@ -166,9 +166,9 @@ const store = createStore({
   },
   mutations: {
 	INIT_TOPICS(state){
-		window.localStorage.clear();
+		//window.localStorage.clear();
 		const savedTopics = window.localStorage.getItem("topics");
-		console.log("saved topics in init", savedTopics);
+		//console.log("saved topics in init", savedTopics);
 		if(savedTopics != undefined){
 			state.topics = JSON.parse(savedTopics)
 		}	

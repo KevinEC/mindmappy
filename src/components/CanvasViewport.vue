@@ -68,6 +68,7 @@ export default {
 
     document.addEventListener('keydown', this.onKeyDown);
     document.addEventListener('keyup', this.onKeyUp);
+    document.addEventListener('keypress', this.onKeyPress);
 
     this.$el.addEventListener('mousemove', this.handleMouseMove);
 		this.$el.addEventListener('mousedown', this.handleMouseDown);
@@ -203,8 +204,8 @@ export default {
       if(e.key === "Alt") {
         this.recalculateGraph();
       }
-      if(e.key === "Tab"){
-        this.saveTopicsToLocalStorage()
+      if(e.key === "ö" || e.key === "Ö") {
+        this.saveTopicsToLocalStorage();
       }
     },
     onKeyUp(e){

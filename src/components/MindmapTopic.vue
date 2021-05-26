@@ -491,6 +491,9 @@ export default {
 				0.05s ease-in filter;
 
 
+	&:focus{
+		outline: 0;
+	}
 	&.selected{
 		border-color: rgba(var(--create-color));
 	}
