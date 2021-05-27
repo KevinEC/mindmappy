@@ -39,8 +39,6 @@ const store = createStore({
 				y: 0,
 			},
 			connections: [
-				// {id: 1, k: 200},
-				// {id: 2, k: 50}
 			]
 		},
 		{
@@ -51,10 +49,7 @@ const store = createStore({
 				y: 80
 			},
 			connections: [
-				{id: "root", k: 200},
-				// {id: 11, k: 200},
-				// {id: 12, k: 200},
-				// {id: 13, k: 200},
+				{id: "root", k: 100},
 			]
 		},
 		{
@@ -65,7 +60,7 @@ const store = createStore({
 				y: 80
 			},
 			connections: [
-				{id: 1, k: 200},
+				{id: 1, k: 100},
 			]
 		},
 		{
@@ -76,7 +71,7 @@ const store = createStore({
 				y: 140
 			},
 			connections: [
-				{id: 1, k: 200},
+				{id: 1, k: 100},
 			]
 		},
 		{
@@ -87,7 +82,7 @@ const store = createStore({
 				y: 200
 			},
 			connections: [
-				{id: 1, k: 200},
+				{id: 1, k: 100},
 			]
 		},
 		{
@@ -98,10 +93,7 @@ const store = createStore({
 				y: -80
 			},
 			connections: [
-				{id: "root", k: 50},
-				// {id: 21, k: 200},
-				// {id: 22, k: 200},
-				// {id: 23, k: 200},
+				{id: "root", k: 10},
 			]
 		},
 		{
@@ -112,7 +104,7 @@ const store = createStore({
 				y: -80
 			},
 			connections: [
-				{id: 2, k: 200},
+				{id: 2, k: 100},
 			]
 		},
 		{
@@ -123,8 +115,7 @@ const store = createStore({
 				y: -160
 			},
 			connections: [
-				{id: 2, k: 200},
-				//{id: 232, k: 200},
+				{id: 2, k: 100},
 			]
 		},
 		{
@@ -135,8 +126,7 @@ const store = createStore({
 				y: -220
 			},
 			connections: [
-				{id: 2, k: 200},
-				// {id: 231, k: 200},
+				{id: 2, k: 100},
 			]
 		},
 		{
@@ -147,7 +137,7 @@ const store = createStore({
 				y: -220
 			},
 			connections: [
-				{id: 23, k: 200},
+				{id: 23, k: 100},
 			]
 		},
 		{
@@ -158,8 +148,7 @@ const store = createStore({
 				y: -300
 			},
 			connections: [
-				{id: 23, k: 200},
-				//{id: 22, k: 200},
+				{id: 23, k: 100},
 			]
 		},
 	]
@@ -269,7 +258,7 @@ const store = createStore({
 	PUSH_TOPIC_CONNECTION(state, {topicToUpdate, toNode, connection}){
 		let force;
 		if(connection.type == undefined || connection.type == "normal")
-			force = 90;
+			force = 40;
 		else if(connection.type == "weak")
 			force = 5;
 		

@@ -28,6 +28,10 @@ export default {
 			floatAnimation: null,
 			floatingTweens: null,
 			blobAnimation: null,
+			bornAnimationPlop: null,
+			bornAnimationMovement: null,
+			bornAnimationStart: false,
+			born: false,
 			localMenuActive: false,
 			currMouseX: 0,
 			currMouseY: 0,
@@ -72,6 +76,8 @@ export default {
 			if(this.floatingComputed) result += "floating ";
 			if(this.data.root) result += "root ";
 			if(this.getMenuActive) result += "blur ";
+			if(this.born) result += "bornAnimation ";
+			if(this.bornAnimationStart) result += "hide ";
 			return result;
 		},
 		positionComputed(){
@@ -90,12 +96,16 @@ export default {
 
 
 		this.id = this.data.id;
+		this.born = this.data.born;
+		if(this.born) this.bornAnimationStart = true;
 		this.initCSS3DObject();
 		this.updateTopicById({id: this.id, updateData: {object: this.object}});
 		this.$emit('CSS3DObjectInit', this.object);
 		this.initFloating();
 		this.initBlobAnimation();
-		this.blobAnimation.start();
+		
+		if(this.data.born)
+			this.initBornAninmation();
 	},
 	watch: {
 		canvasMouseMovement(){
@@ -164,6 +174,11 @@ export default {
 			if(e.button === 0) {
 				this.pressed = true;
 			}
+			if(this.bornAnimationMovement && this.bornAnimationMovement._isPlaying)
+			{
+				this.born = false;
+				this.bornAnimationMovement.stop();
+			}
 			this.pressedX = e.clientX; 
 			this.pressedY = e.clientY;
 
@@ -173,14 +188,11 @@ export default {
 			this.setPressedTopic(this.id);
 			this.handleSelection();
 			this.handleMenu(e);
-			//this.toggleFloating(e); // <-- should be in the menu
 			this.handleGraphNodeMouseDown();
 			this.handleNewConnection(e);
 			this.handleRemoveConnection();
 			
 			if(this.floating){
-				// V this is deffo a part of the problem
-				//if(!this.localMenuActive) 
 				this.floatingPaused = true;
 				this.handleFloatingAnimation(false);
 			}
@@ -358,7 +370,7 @@ export default {
 			}
 		},
 		initBlobAnimation(){
-			let lower = 0.8; 
+			let lower = 0.2; 
 			let upper = 1;
 			this.blobAnimation = new TWEEN
 				.Tween({scaleX: lower, scaleY: lower})
@@ -388,6 +400,75 @@ export default {
 					}
 				}	
 			}
+		},
+		initBornAninmation(){
+			this.born = false;
+
+			let plotDuration = 650;
+			this.bornAnimationPlopX = new TWEEN
+				.Tween({
+					scaleX: 0.2, 
+				})
+				.to({scaleX: [
+					1.4, 1
+				]}, plotDuration)
+				.delay(200)
+				.interpolation(TWEEN.Interpolation.CatmullRom)
+				.easing(TWEEN.Easing.Back.Out)
+				.onStart(()=>{
+					this.born = true;
+					this.bornAnimationStart = false;
+				})
+				.onUpdate(object => {
+					this.object.scale.x = object.scaleX;
+				})
+				.start();
+
+			this.bornAnimationPlopY = new TWEEN
+				.Tween({
+					scaleY: 0,
+				})
+				.to({ scaleY: [
+					0.8, 1.7, 1
+				]}, plotDuration)
+				.delay(200)
+				.interpolation(TWEEN.Interpolation.CatmullRom)
+				.easing(TWEEN.Easing.Back.Out)
+				.onStart(()=>{
+					this.born = true;
+					this.bornAnimationStart = false;
+				})
+				.onUpdate(object => {
+					this.object.scale.y = object.scaleY;
+				})
+				.start();
+			
+			let moveDuration = (1900 + Math.random()*900).toFixed(0);
+			let moveDelay = (Math.random()*400).toFixed(0);
+			this.bornAnimationMovement = new TWEEN
+				.Tween({
+					x: this.data.pos.x, 
+					y: this.data.pos.y,
+				})
+				.to({
+					x: this.data.pos.x - 20 + Math.random()*40, 
+					y: this.data.pos.y - 20 + Math.random()*40, 
+				}, moveDuration)
+				.delay(moveDelay)
+				.repeat(Infinity)
+				.yoyo(true)
+				.easing(TWEEN.Easing.Cubic.Out)
+				.onUpdate(object => {
+					this.object.position.x = object.x;
+					this.object.position.y = object.y;
+
+					if(this.getTopicById(this.id).graphNode) {
+						this.getTopicById(this.id).graphNode.point.p.x = object.x / 50;
+						this.getTopicById(this.id).graphNode.point.p.y = object.y / 50;
+					}
+				}
+			).start();
+
 		},
 		handleGraphNodeMouseDown(){
 			if(this.getTopicById(this.id).graphNode && this.getGraphLayout.graph.adjacency[this.id]){
@@ -481,14 +562,16 @@ export default {
 	border: 1px solid rgb(235, 235, 235);
 	padding: 10px 15px;
 	background-color: white;
+	text-transform: capitalize;
 	box-shadow: 
 				0 0 2px rgba(0,0,0,0.1),
 				0 0 5px rgba(0,0,0,0.08),
 				0 0 15px rgba(0,0,0,0.15);
 	font-family: 'Source Sans Pro';
-	transition: 0.25s ease-in-out width,
-				0.25s ease-in-out height,
-				0.05s ease-in filter;
+	// transition: 0.25s ease-in-out width,
+	// 			0.25s ease-in-out height,
+	// 			0.05s ease-in filter,
+	// 			0.25s ease-in border-radius;
 
 
 	&:focus{
@@ -511,6 +594,48 @@ export default {
 	}
 	&.blur{
 		filter: blur(1px);
+	}
+	&.hide{
+		opacity: 0;
+	}
+	&.bornAnimation{
+		animation: shine .74s ease-out;
+	}
+
+	@keyframes shine {
+		0%{
+			width: 100px;
+			padding: 10px;
+			height: 100px;
+			border-radius: 100%;
+			box-shadow: 0 0 10px rgba(var(--create-color), 0.6),
+						0 0 40px rgba(var(--create-color), 0.4)
+						// 0 0 2px rgba(var(--create-color),0.1),
+						// 0 0 5px rgba(var(--create-color),0.08),
+						// 0 0 15px rgba(var(--create-color),0.15)
+		}
+		25%{
+			box-shadow: 0 0 20px rgba(var(--create-color), 0.6),
+						0 0 55px rgba(var(--create-color), 0.4)
+		}
+		90%{
+			width: 100px;
+			padding: 10px;
+			height: 100px;
+			border-radius: 100%;
+		}
+		98%{
+			width: 70px;
+			padding: 10px;
+			height: 70px;
+			border-radius: 100%;
+		}
+		100%{
+			
+			box-shadow: 0 0 2px rgba(0,0,0,0.1),
+						0 0 5px rgba(0,0,0,0.08),
+						0 0 15px rgba(0,0,0,0.15);
+		}
 	}
 }
 </style>

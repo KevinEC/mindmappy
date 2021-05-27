@@ -86,7 +86,8 @@ export default {
       'setGraph',
       'setGraphLayout',
       'setMenuOption',
-      'saveTopicsToLocalStorage'
+      'saveTopicsToLocalStorage',
+      "setRemoveConnectionId"
     ]),
     setSize(){
       this.width = this.$el.offsetWidth;
@@ -228,6 +229,7 @@ export default {
 			this.pressedY = e.clientY;
       //this.createNewTopic(e);
       this.handleMenu(e);
+      this.setRemoveConnectionId(null)
 		},
 		handleMouseUp(){
       this.pressed = false;
@@ -347,10 +349,11 @@ export default {
 
       this.graphLayout = new Springy.Layout.ForceDirected(
         this.graph,
-        200.0, // Spring stiffness
-        250.0, // Node repulsion
-        0.5, // Damping
-        0.0 // minEnergyThreshold
+        120.0, // Spring stiffness
+        50.0, // Node repulsion
+        0.6, // Damping
+        0.0, // minEnergyThreshold
+        10 // maxSpeed
       );
 
       let x, y;

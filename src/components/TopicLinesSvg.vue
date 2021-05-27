@@ -1,5 +1,5 @@
 <template>
-  <div id="TopicLinesRoot" :class="blurComputed">
+  <div id="topicLinesRoot" :class="blurComputed">
 		<svg :width="svgWidth" :height="svgHeight" id="topicLinesSvg" xmlns="http://www.w3.org/2000/svg">
 			<defs>
 				<filter id="red-glow">
@@ -261,9 +261,12 @@ export default {
 .line{
 	transition: all 0.15s ease-out;
 
-	&.blur{
-	filter: blur(1px);
 }
+#topicLinesRoot{
+
+	&.blur{
+		filter: blur(1px);
+	}
 }
 
 </style>

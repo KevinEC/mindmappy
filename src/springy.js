@@ -477,7 +477,9 @@
 			energy += 0.5 * point.m * speed * speed;
 		});
 
-		return energy;
+		//return energy;
+		//UGLY HACK
+		return 1;
 	};
 
 	var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }; // stolen from coffeescript, thanks jashkenas! ;-)

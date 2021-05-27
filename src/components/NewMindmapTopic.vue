@@ -65,7 +65,8 @@ export default {
       let id = value + (this.object.position.x.toFixed(0)) + (this.object.position.y.toFixed(0));
       this.pushTopic({
         title: value,
-        floating: true,
+        floating: false,
+        born: true,
         id: id,
         pos: {
           x: this.object.position.x,
@@ -84,8 +85,8 @@ export default {
       this.object.visible = false;
     },
     initIdleAnimation(){
-      new TWEEN.Tween({scaleX: 0.97})
-        .to({scaleX: 1.025}, 1250)
+      new TWEEN.Tween({scaleX: 0.95})
+        .to({scaleX: 1.055}, 1250)
         .easing(TWEEN.Easing.Quadratic.InOut)
         .repeat(Infinity)
         .yoyo(true)
@@ -94,8 +95,8 @@ export default {
         })
         .start();
 
-      new TWEEN.Tween({scaleY: 0.985})
-        .to({scaleY: 1.01}, 1250)
+      new TWEEN.Tween({scaleY: 0.955})
+        .to({scaleY: 1.04}, 1250)
         .easing(TWEEN.Easing.Quadratic.InOut)
         .repeat(Infinity)
         .yoyo(true)
